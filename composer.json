@@ -1,0 +1,23 @@
+{
+	"name": "traw/news-archiver",
+	"description": "News Archiver - Move news to archive folders",
+	"type": "typo3-cms-extension",
+	"autoload": {
+		"psr-4": {
+			"TRAW\\NewsArchiver\\": "Classes/"
+		}
+	},
+	"require": {
+		"typo3/cms-core": "^12 || ^13 || ^14",
+		"georgringer/news": "^12 || ^13 || ^14"
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "news_archiver",
+			"version": "1.0.0-stable",
+			"Package": {
+				"providesPackages": {}
+			}
+		}
+	}
+}
