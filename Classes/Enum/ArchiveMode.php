@@ -7,4 +7,5 @@ enum ArchiveMode: string
 {
     case AMOUNT = 'amount';
     case AGE = 'age';
+    case ALL = 'all';
 }

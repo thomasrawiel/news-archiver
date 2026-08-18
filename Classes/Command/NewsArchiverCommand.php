@@ -5,6 +5,8 @@ namespace TRAW\NewsArchiver\Command;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TRAW\NewsArchiver\Domain\DTO\Configuration;
+use TRAW\NewsArchiver\Domain\Repository\NewsRepository;
+use TRAW\NewsArchiver\Service\ArchiveService;
 use TRAW\NewsArchiver\Service\NewsService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -16,13 +18,13 @@ use TRAW\NewsArchiver\Utility\ConfigurationUtility;
     name: 'newsarchiver:run',
     description: 'Archive news records according to the extension\'s settings',
 )]
-class NewsArchiverCommand extends Command
+final class NewsArchiverCommand extends Command
 {
     private SymfonyStyle $io;
 
     public function __construct(
-        private readonly NewsService          $newsService,
         private readonly ConfigurationUtility $configurationUtility,
+        private readonly ArchiveService $archiveService,
     )
     {
         parent::__construct();
@@ -41,7 +43,7 @@ class NewsArchiverCommand extends Command
             return Command::SUCCESS;
         }
 
-        $news = $this->newsService->fetchNews($settings);
+        $this->archiveService->archive();
 
         return Command::SUCCESS;
     }

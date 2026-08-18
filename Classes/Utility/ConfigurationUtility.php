@@ -5,9 +5,10 @@ namespace TRAW\NewsArchiver\Utility;
 
 use TRAW\NewsArchiver\Domain\DTO\Configuration;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-class ConfigurationUtility
+final class ConfigurationUtility implements SingletonInterface
 {
     private ?Configuration $configuration = null;
 

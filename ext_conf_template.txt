@@ -1,11 +1,11 @@
 # cat=News archive; type=boolean; label=Enable news archiver
 enable = 0
 
-# cat=News archive; type=string; label=News folder(s) (comma-list)
+# cat=News archive; type=string; label=News folder(s):comma-list, leave empty to fetch all news records
 newsRootFolder =
 
 # cat=News archive; type=options[0 levels (only selected page)=0,1 levels=1,2 levels=2,3 levels=3,4 levels=4,Infinite=250]; label=Recursive
-recursive =
+recursive = 0
 
 # cat=News archive; type=int+; label=News archive uid:If 0, then the site root will be used and a new Archive folder will be created
 targetPid = 0
@@ -13,7 +13,7 @@ targetPid = 0
 # cat=Archiver settings; type=options[Move & set archive date=both,Move only=move,Set archive date only=archive]; label=Archive mode: explanation
 archiveAction = both
 
-# cat=Archiver settings; type=options[By age=age,By amount=amount]; label=Archive news by
+# cat=Archiver settings; type=options[By age=age,By amount=amount,All=all]; label=Archive news by age or amount:Age = archive records older than x, Amount = Keep the latest x records, archive the rest
 archiveMode = age
 
 # cat=Archiver settings; type=int+; label=Age in days or amount

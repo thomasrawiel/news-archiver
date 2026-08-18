@@ -12,7 +12,7 @@ use function Symfony\Component\String\s;
 class Configuration implements SingletonInterface
 {
     private const array DEFAULT_VALUES = [
-        'enabled' => false,
+        'enable' => false,
         'archiveAction' => ArchiveAction::BOTH->value,
         'archiveMode' => ArchiveMode::AGE->value,
         'archiveNewsAmount' => 90,
@@ -31,7 +31,7 @@ class Configuration implements SingletonInterface
 
     public function __construct(array $configuration)
     {
-        $this->isEnabled = (bool)($configuration['enabled'] ?? self::DEFAULT_VALUES['enabled']);
+        $this->isEnabled = (bool)($configuration['enable'] ?? self::DEFAULT_VALUES['enable']);
         $this->archiveNewsAmount = (int)($configuration['archiveNewsAmount'] ?? self::DEFAULT_VALUES['archiveNewsAmount']);
         $this->newsRootFolder = (string)($configuration['newsRootFolder'] ?? '');
         $this->recursive = (int)($configuration['recursive'] ?? self::DEFAULT_VALUES['recursive']);
@@ -77,6 +77,10 @@ class Configuration implements SingletonInterface
         return $this->archiveMode === ArchiveMode::AMOUNT;
     }
 
+    public function archiveAllNews(): bool {
+        return $this->archiveMode === ArchiveMode::ALL;
+    }
+
     public function getArchiveNewsAmount(): int
     {
         return $this->archiveNewsAmount;
@@ -105,6 +109,10 @@ class Configuration implements SingletonInterface
     public function getNewsRootFolder(): string
     {
         return $this->newsRootFolder;
+    }
+
+    public function ignorePids(): bool {
+        return $this->newsRootFolder === '';
     }
 
     public function getRecursive(): int
