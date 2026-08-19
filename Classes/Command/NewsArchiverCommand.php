@@ -13,6 +13,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TRAW\NewsArchiver\Utility\ConfigurationUtility;
+use TYPO3\CMS\Core\Core\Bootstrap;
 
 #[AsCommand(
     name: 'newsarchiver:run',
@@ -20,11 +21,9 @@ use TRAW\NewsArchiver\Utility\ConfigurationUtility;
 )]
 final class NewsArchiverCommand extends Command
 {
-    private SymfonyStyle $io;
-
     public function __construct(
         private readonly ConfigurationUtility $configurationUtility,
-        private readonly ArchiveService $archiveService,
+        private readonly ArchiveService       $archiveService,
     )
     {
         parent::__construct();
@@ -32,36 +31,27 @@ final class NewsArchiverCommand extends Command
 
     public function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
 
-        $this->renderTitle();
+        if($io->isVerbose()) {
+            $io->title('Archive news records');
+        }
 
         $settings = $this->configurationUtility->getConfiguration();
 
         if ($settings->isEnabled() === false) {
-            $this->renderMessage('News archiver is not enabled. Check the extension\'s settings.');
+            $io->info('News archiver is not enabled. Check the extension\'s settings.');
             return Command::SUCCESS;
         }
 
-        $this->archiveService->archive();
+        Bootstrap::initializeBackendAuthentication();
+        $this->archiveService->archive($io);
+
+        if($io->isVerbose()) {
+            $io->success('Archive news records succeeded.');
+            $io->info('Running typo3 referenceindex:update is recommended');
+        }
 
         return Command::SUCCESS;
-    }
-
-    private function renderTitle(): void
-    {
-        if ($this->io->isVerbose()) {
-            $this->io->title('Archive news records');
-        }
-    }
-
-    private function renderMessage(string $message, bool $veryVerbose = false): void
-    {
-        if ($veryVerbose && $this->io->isVeryVerbose()) {
-            $this->io->writeln($message);
-        }
-        if (!$veryVerbose && $this->io->isVerbose()) {
-            $this->io->writeln($message);
-        }
     }
 }

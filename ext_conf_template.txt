@@ -19,7 +19,13 @@ archiveMode = age
 # cat=Archiver settings; type=int+; label=Age in days or amount
 archiveNewsAmount = 90
 
+# cat=Archiver settings; type=boolean; label=Keep the original folder structure in the archive
+keepOriginalStructure = 1
+
 # cat=Archiver settings; type=options[None=none,Newsdate year=year, Newsdate month=month]; label=Create subfolders in archive folder
 subfolders = none
+
+# cat=Archiver settings; type=int+; label=Number of news records archived per run
+limit = 100
 
 

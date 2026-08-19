@@ -6,25 +6,10 @@ namespace TRAW\NewsArchiver\Domain\Repository;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use TRAW\NewsArchiver\Domain\DTO\Configuration;
-use TRAW\NewsArchiver\Event\AddRestrictionsEvent;
-use TRAW\NewsArchiver\Event\RemoveRestrictionsEvent;
-use TRAW\NewsArchiver\Utility\PidUtility;
-use TRAW\NewsArchiver\Utility\TreeListUtility;
-use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
-use TYPO3\CMS\Core\Database\Query\Restriction\QueryRestrictionInterface;
-use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-final readonly class NewsRepository
+final readonly class NewsRepository extends AbstractRepository
 {
-    public function __construct(
-        private ConnectionPool  $connectionPool,
-        private EventDispatcher $eventDispatcher,
-        private PidUtility      $pidUtility
-    )
-    {
-    }
+    public const string TABLE = 'tx_news_domain_model_news';
 
     public function fetchNews(Configuration $configuration): array
     {
@@ -32,23 +17,7 @@ final readonly class NewsRepository
             return [];
         }
 
-        $qb = $this->connectionPool->getQueryBuilderForTable('tx_news_domain_model_news');
-        $qb->getRestrictions()->removeAll();
-
-        $removeRestrictions = $this->eventDispatcher->dispatch(new RemoveRestrictionsEvent());
-        foreach ($removeRestrictions->getRestrictions() as $restriction) {
-            if (is_a($restriction, QueryRestrictionInterface::class, true)) {
-                $qb->getRestrictions()->removeByType($restriction);
-            }
-        }
-        $addRestrictions = $this->eventDispatcher->dispatch(new AddRestrictionsEvent([DeletedRestriction::class]));
-        foreach ($addRestrictions->getRestrictions() as $restriction) {
-            if (is_a($restriction, QueryRestrictionInterface::class, true)) {
-                $qb->getRestrictions()->add(
-                    GeneralUtility::makeInstance($restriction)
-                );
-            }
-        }
+        $qb = $this->createQueryBuilder(self::TABLE);
 
         $constraints = [];
         $expr = $qb->expr();
@@ -71,23 +40,43 @@ final readonly class NewsRepository
         }
 
         //only records in default, all or without default language
+        $l10nParent = $GLOBALS['TCA'][self::TABLE]['ctrl']['transOrigPointerField'];
         $constraints[] = $expr->or(
             $qb->expr()->in('sys_language_uid', $qb->createNamedParameter([0, -1], ArrayParameterType::INTEGER)),
             $expr->and(
                 $expr->gt('sys_language_uid', $qb->createNamedParameter(0, ParameterType::INTEGER)),
-                $expr->eq('l10n_parent', $qb->createNamedParameter(0, ParameterType::INTEGER))
+                $expr->eq($l10nParent, $qb->createNamedParameter(0, ParameterType::INTEGER))
             )
         );
 
         $qb->select('*')
-            ->from('tx_news_domain_model_news')
+            ->from(self::TABLE)
             ->where(...$constraints)
-            ->orderBy('datetime', 'DESC');
+            ->orderBy('datetime', 'ASC')
+            ->setMaxResults($configuration->getLimit());
 
         try {
             return $qb->executeQuery()->fetchAllAssociative();
         } catch (\Throwable) {
             return [];
+        }
+    }
+
+    public function setArchiveDate(int $newsUid, int $archiveDate): int
+    {
+        $l10nParent = $GLOBALS['TCA'][self::TABLE]['ctrl']['transOrigPointerField'];
+        $qb = $this->createQueryBuilder(self::TABLE);
+        try {
+            return $qb->update(self::TABLE)
+                ->set('archive', $archiveDate, true, ParameterType::INTEGER)
+                ->where(
+                    $qb->expr()->or(
+                        $qb->expr()->eq('uid', $qb->createNamedParameter($newsUid, ParameterType::INTEGER)),
+                        $qb->expr()->eq($l10nParent, $qb->createNamedParameter($newsUid, ParameterType::INTEGER)),
+                    )
+                )->executeStatement();
+        } catch (\Throwable) {
+            return 0;
         }
     }
 }

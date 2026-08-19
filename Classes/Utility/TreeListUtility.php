@@ -10,7 +10,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 final readonly class TreeListUtility
 {
-    public function getTreeListFromId($id, $depth, $begin = 0): string
+    public function getTreeListFromId(string|int $id, string|int $depth, $begin = 0): string
     {
         $depth = (int)$depth;
         $begin = (int)$begin;
@@ -70,11 +70,11 @@ final readonly class TreeListUtility
 
     public function getTreeListArrayFromArray(array $pids, int $depth, int $begin = 0): array
     {
-        return GeneralUtility::trimExplode(',', $this->getTreeListFromArray($pids, $depth, $begin), true);
+        return GeneralUtility::intExplode(',', $this->getTreeListFromArray($pids, $depth, $begin), true);
     }
 
-    public function getTreeListArray($id, $depth, $begin = 0): array
+    public function getTreeListArray(string|int $id, int $depth, $begin = 0): array
     {
-        return GeneralUtility::trimExplode(',', $this->getTreeListFromId($id, $depth, $begin), true);
+        return GeneralUtility::intExplode(',', $this->getTreeListFromId($id, $depth, $begin), true);
     }
 }

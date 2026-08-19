@@ -16,7 +16,7 @@ enum SubFolders: string
 
     public function allowYear(): bool
     {
-        return $this === self::YEAR;
+        return $this === self::YEAR || $this === self::MONTH;
     }
 
     public function allowMonth(): bool

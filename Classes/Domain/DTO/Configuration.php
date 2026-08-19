@@ -16,17 +16,22 @@ class Configuration implements SingletonInterface
         'archiveAction' => ArchiveAction::BOTH->value,
         'archiveMode' => ArchiveMode::AGE->value,
         'archiveNewsAmount' => 90,
+        'keepOriginalStructure' => true,
         'subfolders' => SubFolders::NONE->value,
         'recursive' => 0,
+        'limit' => 200,
     ];
     private bool $isEnabled;
     private ArchiveAction $archiveAction;
     private ArchiveMode $archiveMode;
     private int $archiveNewsAmount;
+    private bool $keepOriginalStructure;
     private SubFolders $subfolders;
     private string $newsRootFolder;
     private int $recursive;
     private int $targetPid;
+
+    private int $limit;
 
 
     public function __construct(array $configuration)
@@ -36,6 +41,8 @@ class Configuration implements SingletonInterface
         $this->newsRootFolder = (string)($configuration['newsRootFolder'] ?? '');
         $this->recursive = (int)($configuration['recursive'] ?? self::DEFAULT_VALUES['recursive']);
         $this->targetPid = (int)($configuration['targetPid'] ?? 0);
+        $this->keepOriginalStructure = (bool)($configuration['keepOriginalStructure'] ?? false);
+        $this->limit = (int)($configuration['limit'] ?? self::DEFAULT_VALUES['limit']);
 
         $this->archiveAction = ArchiveAction::tryFrom((string)$configuration['archiveAction']) ?? ArchiveAction::from(self::DEFAULT_VALUES['archiveAction']);;
         $this->archiveMode = ArchiveMode::tryFrom((string)$configuration['archiveMode']) ?? ArchiveMode::from(self::DEFAULT_VALUES['archiveMode']);
@@ -123,5 +130,15 @@ class Configuration implements SingletonInterface
     public function getTargetPid(): int
     {
         return $this->targetPid;
+    }
+
+    public function isKeepOriginalStructure(): bool
+    {
+        return $this->keepOriginalStructure;
+    }
+
+    public function getLimit(): int
+    {
+        return $this->limit;
     }
 }

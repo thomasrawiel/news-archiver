@@ -7,8 +7,13 @@ use TYPO3\CMS\Core\Database\Query\Restriction\QueryRestrictionInterface;
 
 class AddRestrictionsEvent
 {
-    public function __construct(private array $restrictions = [])
+    public function __construct(private string $tableName, private array $restrictions = [])
     {
+    }
+
+    public function getTableName(): string
+    {
+        return $this->tableName;
     }
 
     public function getRestrictions(): array
