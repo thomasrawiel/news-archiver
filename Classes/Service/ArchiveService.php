@@ -54,10 +54,21 @@ final readonly class ArchiveService extends AbstractService
         }
 
         if($io->isVerbose()) {
-            $io->info('Executing datahandler for '.$configuration->getLimit().' records. This may take a while...');
+            $io->info('Executing datahandler for '.count($moveCommand[NewsRepository::TABLE]).' records. This may take a while...');
         }
 
-        $this->runDataHandler([], $moveCommand);
+        $chunks = array_chunk($moveCommand[NewsRepository::TABLE], 20, true);
+        $pb = $io->createProgressBar(count($chunks));
+
+        foreach($chunks as $chunk) {
+            $cmd = [];
+            $cmd[NewsRepository::TABLE] = $chunk;
+            $this->runDataHandler([], $cmd);
+            $pb->advance();
+        }
+        $pb->finish();
+        $io->newLine();
+
     }
 
     private function setArchiveDate(array $newsRecord): bool
