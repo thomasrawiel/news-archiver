@@ -7,7 +7,6 @@ use TRAW\NewsArchiver\Enum\ArchiveAction;
 use TRAW\NewsArchiver\Enum\ArchiveMode;
 use TRAW\NewsArchiver\Enum\SubFolders;
 use TYPO3\CMS\Core\SingletonInterface;
-use function Symfony\Component\String\s;
 
 class Configuration implements SingletonInterface
 {
@@ -84,7 +83,8 @@ class Configuration implements SingletonInterface
         return $this->archiveMode === ArchiveMode::AMOUNT;
     }
 
-    public function archiveAllNews(): bool {
+    public function archiveAllNews(): bool
+    {
         return $this->archiveMode === ArchiveMode::ALL;
     }
 
@@ -118,7 +118,8 @@ class Configuration implements SingletonInterface
         return $this->newsRootFolder;
     }
 
-    public function ignorePids(): bool {
+    public function ignorePids(): bool
+    {
         return $this->newsRootFolder === '';
     }
 

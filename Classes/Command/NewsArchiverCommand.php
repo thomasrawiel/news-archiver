@@ -4,10 +4,7 @@ declare(strict_types=1);
 namespace TRAW\NewsArchiver\Command;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
-use TRAW\NewsArchiver\Domain\DTO\Configuration;
-use TRAW\NewsArchiver\Domain\Repository\NewsRepository;
 use TRAW\NewsArchiver\Service\ArchiveService;
-use TRAW\NewsArchiver\Service\NewsService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -37,11 +34,19 @@ final class NewsArchiverCommand extends Command
             $io->title('Archive news records');
         }
 
-        $settings = $this->configurationUtility->getConfiguration();
+        $configuration = $this->configurationUtility->getConfiguration();
 
-        if ($settings->isEnabled() === false) {
+        if ($configuration->isEnabled() === false) {
             $io->info('News archiver is not enabled. Check the extension\'s settings.');
             return Command::SUCCESS;
+        }
+
+        //temp throw exceptions for not yet implemented settings
+        if($configuration->isKeepOriginalStructure()) {
+            throw new \LogicException('Feature "keepOriginalStructure" is not implemented, yet.');
+        }
+        if($configuration->getTargetPid() === 0) {
+            throw new \LogicException('Feature "targetPid is 0" is not implemented, yet.');
         }
 
         Bootstrap::initializeBackendAuthentication();
