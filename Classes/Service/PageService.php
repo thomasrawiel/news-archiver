@@ -5,6 +5,7 @@ namespace TRAW\NewsArchiver\Service;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Throwable;
+use TRAW\NewsArchiver\Domain\DTO\Configuration;
 use TRAW\NewsArchiver\Domain\Repository\NewsRepository;
 use TRAW\NewsArchiver\Domain\Repository\PageRepository;
 use TRAW\NewsArchiver\Utility\ConfigurationUtility;
@@ -12,21 +13,24 @@ use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
-final readonly class PageService extends AbstractService
+final class PageService extends AbstractService
 {
 
     public function __construct(
-        protected ConfigurationUtility $configurationUtility,
         protected NewsRepository       $newsRepository,
         protected PageRepository       $pageRepository
     )
     {
     }
 
+    public function setConfiguration(Configuration $configuration): void
+    {
+        $this->configuration = $configuration;
+    }
+
     public function getPidMap(array $news, SymfonyStyle $io): array
     {
-        $configuration = $this->configurationUtility->getConfiguration();
-        if ($configuration->getTargetPid() === 0) {
+        if ($this->configuration->getTargetPid() === 0) {
             throw new \LogicException('Archive target page is missing from the extension\'s settigs');
         }
 
@@ -34,25 +38,25 @@ final readonly class PageService extends AbstractService
         $years = [];
         $months = [];
 
-        $languages = $this->getLanguages($configuration->getTargetPid());
+        $languages = $this->getLanguages($this->configuration->getTargetPid());
 
         foreach ($news as $record) {
-            if ($configuration->isKeepOriginalStructure()) {
-                if ($configuration->createSubFolders()) {
+            if ($this->configuration->isKeepOriginalStructure()) {
+                if ($this->configuration->createSubFolders()) {
 
                 } else {
 
                 }
             } else {
-                if ($configuration->createSubFolders()) {
-                    if ($configuration->createYearSubfolders()) {
+                if ($this->configuration->createSubFolders()) {
+                    if ($this->configuration->createYearSubfolders()) {
                         $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
                         $year = $d->format('Y');
 
-                        $newPid = $this->pageRepository->findPageByTitleAndPid($year, $configuration->getTargetPid());
+                        $newPid = $this->pageRepository->findPageByTitleAndPid($year, $this->configuration->getTargetPid());
 
                         if ($newPid === 0) {
-                            $insertPid = count($years) && isset($years[$year - 1]) ? $years[$year - 1] * -1 : $configuration->getTargetPid();
+                            $insertPid = count($years) && isset($years[$year - 1]) ? $years[$year - 1] * -1 : $this->configuration->getTargetPid();
                             $newPid = $this->createPage($year, $insertPid);
                             $translations = $this->translatePage($newPid, $languages);
 
@@ -66,7 +70,7 @@ final readonly class PageService extends AbstractService
                         $years[$year] = $newPid;
                     }
 
-                    if ($configuration->createMonthSubfolders()) {
+                    if ($this->configuration->createMonthSubfolders()) {
                         $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
                         $year = $d->format('Y');
                         $month = $d->format('m');
@@ -92,7 +96,7 @@ final readonly class PageService extends AbstractService
 
                     }
                 } else {
-                    $pidMap[$record['uid']] = $configuration->getTargetPid();
+                    $pidMap[$record['uid']] = $this->configuration->getTargetPid();
                 }
             }
         }
@@ -102,7 +106,7 @@ final readonly class PageService extends AbstractService
 
     private function createPage(string $title, int $pid): int
     {
-        $archiveRootPage = $this->pageRepository->getPageRecord($this->configurationUtility->getConfiguration()->getTargetPid());
+        $archiveRootPage = $this->pageRepository->getPageRecord($this->configuration->getTargetPid());
 
         //use these fields from the archive root page
         $createPage = array_intersect_key(

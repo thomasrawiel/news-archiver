@@ -3,11 +3,15 @@ declare(strict_types=1);
 
 namespace TRAW\NewsArchiver\Service;
 
+use TRAW\NewsArchiver\Domain\DTO\Configuration;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-abstract readonly class AbstractService
+abstract class AbstractService implements SingletonInterface
 {
+    protected Configuration $configuration;
+
     protected function runDataHandler(array $dataMap = [], array $cmdMap = []): ?array
     {
         if ($cmdMap === [] && $dataMap === []) {

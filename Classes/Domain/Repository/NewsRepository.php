@@ -23,7 +23,8 @@ final readonly class NewsRepository extends AbstractRepository
         $expr = $qb->expr();
 
         if (!$configuration->ignorePids()) {
-            $constraints[] = $expr->in('pid', $qb->createNamedParameter($this->pidUtility->getStoragePids(), ArrayParameterType::INTEGER));
+            $pids = $this->pidUtility->getStoragePids($configuration->getNewsRootFolder(), $configuration->getRecursive());
+            $constraints[] = $expr->in('pid', $qb->createNamedParameter($pids, ArrayParameterType::INTEGER));
         }
 
         if (!$configuration->archiveAllNews()) {

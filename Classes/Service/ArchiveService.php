@@ -4,26 +4,32 @@ declare(strict_types=1);
 namespace TRAW\NewsArchiver\Service;
 
 use Symfony\Component\Console\Style\SymfonyStyle;
+use TRAW\NewsArchiver\Domain\DTO\Configuration;
 use TRAW\NewsArchiver\Domain\Repository\NewsRepository;
 use TRAW\NewsArchiver\Domain\Repository\PageRepository;
 use TRAW\NewsArchiver\Utility\ConfigurationUtility;
 
-final readonly class ArchiveService extends AbstractService
+final class ArchiveService extends AbstractService
 {
     public function __construct(
-        protected ConfigurationUtility $configurationUtility,
-        protected NewsRepository       $newsRepository,
-        protected PageService          $pageService,
-        protected PageRepository       $pageRepository
+        protected readonly ConfigurationUtility $configurationUtility,
+        protected readonly NewsRepository       $newsRepository,
+        protected readonly PageService          $pageService,
+        protected readonly PageRepository       $pageRepository
     )
     {
     }
 
-    public function archive(SymfonyStyle $io): void
+    public function archive(SymfonyStyle $io, ?Configuration $configuration = null): void
     {
-        $configuration = $this->configurationUtility->getConfiguration();
+        if($configuration === null) {
+            $this->configuration = $this->configurationUtility->getConfiguration();
+        }else {
+            $this->configuration = $configuration;
+        }
+       $this->pageService->setConfiguration($this->configuration);
 
-        $news = $this->newsRepository->fetchNews($configuration);
+        $news = $this->newsRepository->fetchNews($this->configuration);
         if ($news === []) {
             return;
         }
@@ -38,14 +44,14 @@ final readonly class ArchiveService extends AbstractService
 
         foreach ($news as $record) {
             $recordUid = $record['uid'];
-            if ($configuration->isArchiveModeMove() && isset($pidMap[$recordUid])) {
+            if ($this->configuration->isArchiveModeMove() && isset($pidMap[$recordUid])) {
                 $this->moveRecord($recordUid, $pidMap[$recordUid], NewsRepository::TABLE, $moveCommand);
                 if($io->isVeryVerbose()) {
                     $io->writeln("Moving record [$recordUid] to page [$pidMap[$recordUid]]");
                 }
             }
 
-            if ($configuration->isArchiveModeArchive()) {
+            if ($this->configuration->isArchiveModeArchive()) {
                 $updated = $this->setArchiveDate($record);
                 if($io->isVeryVerbose()) {
                     $io->writeln(($updated ? "Set archive date to NOW" : "Skippped setting archive date"). "for record uid [$recordUid]");

@@ -8,25 +8,22 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 readonly class PidUtility
 {
     public function __construct(
-        private ConfigurationUtility $configurationUtility,
         private TreeListUtility      $treeListUtility
     )
     {
     }
 
-    public function getStoragePids(): array
+    public function getStoragePids(string $newsRootFolder, int $recursive): array
     {
-        $configuration = $this->configurationUtility->getConfiguration();
-
         $rootFolders = array_map(
             static fn(string $value): int => (int)$value,
             array_filter(
-                GeneralUtility::trimExplode(',', $configuration->getNewsRootFolder()),
+                GeneralUtility::trimExplode(',', $newsRootFolder),
                 //only positive decimal/ numerical values = int+
                 static fn(string $value): bool => ctype_digit($value)
             )
         );
 
-        return $this->treeListUtility->getTreeListArrayFromArray($rootFolders, $configuration->getRecursive());
+        return $this->treeListUtility->getTreeListArrayFromArray($rootFolders, $recursive);
     }
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace TRAW\NewsArchiver\Domain\DTO;
 
+use BackedEnum;
 use TRAW\NewsArchiver\Enum\ArchiveAction;
 use TRAW\NewsArchiver\Enum\ArchiveMode;
 use TRAW\NewsArchiver\Enum\SubFolders;
@@ -10,42 +11,76 @@ use TYPO3\CMS\Core\SingletonInterface;
 
 class Configuration implements SingletonInterface
 {
-    private const array DEFAULT_VALUES = [
-        'enable' => false,
+    public const array DEFAULT_VALUES = [
+        'enable' => true,
         'archiveAction' => ArchiveAction::BOTH->value,
         'archiveMode' => ArchiveMode::AGE->value,
-        'archiveNewsAmount' => 90,
-        'keepOriginalStructure' => true,
+        'archiveNewsAmount' => 365,
+        'newsRootFolder' => '',
+        'keepOriginalStructure' => false,
         'subfolders' => SubFolders::NONE->value,
         'recursive' => 0,
         'limit' => 200,
+        'targetPid' => 0,
     ];
     private bool $isEnabled;
-    private ArchiveAction $archiveAction;
-    private ArchiveMode $archiveMode;
-    private int $archiveNewsAmount;
-    private bool $keepOriginalStructure;
-    private SubFolders $subfolders;
     private string $newsRootFolder;
     private int $recursive;
     private int $targetPid;
-
+    private int $archiveNewsAmount;
+    private bool $keepOriginalStructure;
     private int $limit;
+    private ArchiveAction $archiveAction;
+    private ArchiveMode $archiveMode;
+    private SubFolders $subfolders;
 
 
     public function __construct(array $configuration)
     {
-        $this->isEnabled = (bool)($configuration['enable'] ?? self::DEFAULT_VALUES['enable']);
-        $this->archiveNewsAmount = (int)($configuration['archiveNewsAmount'] ?? self::DEFAULT_VALUES['archiveNewsAmount']);
-        $this->newsRootFolder = (string)($configuration['newsRootFolder'] ?? '');
-        $this->recursive = (int)($configuration['recursive'] ?? self::DEFAULT_VALUES['recursive']);
-        $this->targetPid = (int)($configuration['targetPid'] ?? 0);
-        $this->keepOriginalStructure = (bool)($configuration['keepOriginalStructure'] ?? false);
-        $this->limit = (int)($configuration['limit'] ?? self::DEFAULT_VALUES['limit']);
+        $this->isEnabled = (bool)$this->resolveSetting('enable', $configuration);
+        $this->archiveNewsAmount = (int)$this->resolveSetting('archiveNewsAmount', $configuration);
+        $this->newsRootFolder = (string)$this->resolveSetting('newsRootFolder', $configuration);
+        $this->recursive = (int)$this->resolveSetting('recursive', $configuration);
+        $this->targetPid = (int)$this->resolveSetting('targetPid', $configuration);
+        $this->keepOriginalStructure = (bool)$this->resolveSetting('keepOriginalStructure', $configuration);
+        $this->limit = (int)$this->resolveSetting('limit', $configuration);
 
-        $this->archiveAction = ArchiveAction::tryFrom((string)$configuration['archiveAction']) ?? ArchiveAction::from(self::DEFAULT_VALUES['archiveAction']);;
-        $this->archiveMode = ArchiveMode::tryFrom((string)$configuration['archiveMode']) ?? ArchiveMode::from(self::DEFAULT_VALUES['archiveMode']);
-        $this->subfolders = SubFolders::tryFrom((string)$configuration['subfolders']) ?? SubFolders::from(self::DEFAULT_VALUES['subfolders']);
+        $this->archiveAction = $this->resolveEnum(ArchiveAction::class, 'archiveAction', $configuration);
+        $this->archiveMode = $this->resolveEnum(ArchiveMode::class, 'archiveMode', $configuration);
+        $this->subfolders = $this->resolveEnum(SubFolders::class, 'subfolders', $configuration);
+    }
+
+    /**
+     * @template NewsArchiverEnum of BackedEnum
+     *
+     * @param class-string<NewsArchiverEnum> $enumClass
+     * @param string                         $setting
+     * @param array                          $configuration
+     *
+     * @return NewsArchiverEnum
+     */
+    private function resolveEnum(string $enumClass, string $setting, array $configuration): BackedEnum
+    {
+        $value = $this->resolveSetting($setting, $configuration);
+
+        if ($value instanceof $enumClass) {
+            return $value;
+        }
+
+        return $enumClass::tryFrom((string)$value)
+            ?? $enumClass::from(self::DEFAULT_VALUES[$setting]);
+    }
+
+    /**
+     * @template NewsArchiverEnum of BackedEnum
+     *
+     * @param string $setting
+     * @param array  $configuration
+     *
+     * @return string|int|bool|NewsArchiverEnum
+     */
+    private function resolveSetting(string $setting, array $configuration): string|int|bool|BackedEnum    {
+        return $configuration[$setting] ?? self::DEFAULT_VALUES[$setting];
     }
 
     public function isEnabled(): bool
@@ -141,5 +176,21 @@ class Configuration implements SingletonInterface
     public function getLimit(): int
     {
         return $this->limit;
+    }
+
+    public function __toArray(): array
+    {
+        return [
+            'isEnabled' => $this->isEnabled,
+            'archiveNewsAmount' => $this->archiveNewsAmount,
+            'newsRootFolder' => $this->newsRootFolder,
+            'recursive' => $this->recursive,
+            'targetPid' => $this->targetPid,
+            'keepOriginalStructure' => $this->keepOriginalStructure,
+            'limit' => $this->limit,
+            'archiveAction' => $this->archiveAction,
+            'archiveMode' => $this->archiveMode,
+            'subfolders' => $this->subfolders,
+        ];
     }
 }
