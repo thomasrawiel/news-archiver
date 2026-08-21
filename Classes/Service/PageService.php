@@ -8,7 +8,9 @@ use Throwable;
 use TRAW\NewsArchiver\Domain\DTO\Configuration;
 use TRAW\NewsArchiver\Domain\Repository\NewsRepository;
 use TRAW\NewsArchiver\Domain\Repository\PageRepository;
+use TRAW\NewsArchiver\Event\CreatePageAttributesEvent;
 use TRAW\NewsArchiver\Utility\ConfigurationUtility;
+use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
@@ -17,8 +19,8 @@ final class PageService extends AbstractService
 {
 
     public function __construct(
-        protected NewsRepository       $newsRepository,
-        protected PageRepository       $pageRepository
+        private readonly PageRepository $pageRepository,
+        private EventDispatcher         $eventDispatcher,
     )
     {
     }
@@ -49,10 +51,11 @@ final class PageService extends AbstractService
                 }
             } else {
                 if ($this->configuration->createSubFolders()) {
-                    if ($this->configuration->createYearSubfolders()) {
-                        $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
-                        $year = $d->format('Y');
+                    $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
+                    $year = $d->format('Y');
+                    $month = $d->format('m');
 
+                    if ($this->configuration->createYearSubfolders()) {
                         $newPid = $this->pageRepository->findPageByTitleAndPid($year, $this->configuration->getTargetPid());
 
                         if ($newPid === 0) {
@@ -78,10 +81,6 @@ final class PageService extends AbstractService
                     }
 
                     if ($this->configuration->createMonthSubfolders()) {
-                        $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
-                        $year = $d->format('Y');
-                        $month = $d->format('m');
-
                         $newPid = $this->pageRepository->findPageByTitleAndPid($month, $years[$year]);
 
                         if ($newPid === 0) {
@@ -120,10 +119,17 @@ final class PageService extends AbstractService
     {
         $archiveRootPage = $this->pageRepository->getPageRecord($this->configuration->getTargetPid());
 
+
+        $usePageProperties = $this->eventDispatcher->dispatch(
+            new CreatePageAttributesEvent(
+                ['doktype', 'hidden', 'fe_group', 'perms_userid', 'perms_groupid', 'perms_everybody', 'module', 'backend_layout', 'backend_layout_next_level']
+            )
+        )->getPageAttributes();
+
         //use these fields from the archive root page
         $createPage = array_intersect_key(
             $archiveRootPage,
-            array_flip(['doktype', 'hidden', 'fe_group', 'perms_userid', 'perms_groupid', 'perms_everybody', 'module', 'backend_layout', 'backend_layout_next_level'])
+            array_flip($usePageProperties)
         );
         $createPage['title'] = $title;
         $createPage['pid'] = $pid;
