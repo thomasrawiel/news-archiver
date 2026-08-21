@@ -56,7 +56,14 @@ final class PageService extends AbstractService
                         $newPid = $this->pageRepository->findPageByTitleAndPid($year, $this->configuration->getTargetPid());
 
                         if ($newPid === 0) {
-                            $insertPid = count($years) && isset($years[$year - 1]) ? $years[$year - 1] * -1 : $this->configuration->getTargetPid();
+                            $previousYears = array_filter(
+                                array_keys($years),
+                                static fn(int $existingYear): bool => $existingYear < $year
+                            );
+                            $insertPid = $previousYears !== []
+                                ? $years[max($previousYears)] * -1
+                                : $this->configuration->getTargetPid();
+
                             $newPid = $this->createPage($year, $insertPid);
                             $translations = $this->translatePage($newPid, $languages);
 
@@ -78,10 +85,15 @@ final class PageService extends AbstractService
                         $newPid = $this->pageRepository->findPageByTitleAndPid($month, $years[$year]);
 
                         if ($newPid === 0) {
-                            $previousMonth = sprintf('%02d', (int)$month - 1);
-                            $insertPid = isset($months[$year][$previousMonth])
-                                ? $months[$year][$previousMonth] * -1
+                            $previousMonths = array_filter(
+                                array_keys($months[$year] ?? []),
+                                static fn(string $existingMonth): bool => $existingMonth < $month
+                            );
+
+                            $insertPid = $previousMonths !== []
+                                ? $months[$year][max($previousMonths)] * -1
                                 : $years[$year];
+
                             $newPid = $this->createPage($month, $insertPid);
                             $translations = $this->translatePage($newPid, $languages);
 
