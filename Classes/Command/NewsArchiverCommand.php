@@ -44,7 +44,7 @@ final class NewsArchiverCommand extends Command
             'recursive' => [
                 'shortcut' => 'r',
                 'mode' => InputOption::VALUE_OPTIONAL,
-                'description' => 'News folder(s):comma-list, leave empty to fetch all news records',
+                'description' => 'Recursion depth when fetching news. 0 means no recursion.',
             ],
             'targetPid' => [
                 'shortcut' => 'P',
