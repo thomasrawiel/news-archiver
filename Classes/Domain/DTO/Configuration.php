@@ -90,12 +90,12 @@ class Configuration implements SingletonInterface
         return $this->archiveAction;
     }
 
-    public function isArchiveModeMove(): bool
+    public function isArchiveActionMove(): bool
     {
         return $this->archiveAction->allowsMove();
     }
 
-    public function isArchiveModeArchive(): bool
+    public function isArchiveActionArchive(): bool
     {
         return $this->archiveAction->allowsArchive();
     }

@@ -44,14 +44,14 @@ final class ArchiveService extends AbstractService
 
         foreach ($news as $record) {
             $recordUid = $record['uid'];
-            if ($this->configuration->isArchiveModeMove() && isset($pidMap[$recordUid])) {
+            if ($this->configuration->isArchiveActionMove() && isset($pidMap[$recordUid])) {
                 $this->moveRecord($recordUid, $pidMap[$recordUid], NewsRepository::TABLE, $moveCommand);
                 if($io->isVeryVerbose()) {
                     $io->writeln("Moving record [$recordUid] to page [$pidMap[$recordUid]]");
                 }
             }
 
-            if ($this->configuration->isArchiveModeArchive()) {
+            if ($this->configuration->isArchiveActionArchive()) {
                 $updated = $this->setArchiveDate($record);
                 if($io->isVeryVerbose()) {
                     $io->writeln(($updated ? "Set archive date to NOW" : "Skippped setting archive date"). "for record uid [$recordUid]");
