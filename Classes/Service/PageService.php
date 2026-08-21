@@ -13,6 +13,7 @@ use TRAW\NewsArchiver\Utility\ConfigurationUtility;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
 
 final class PageService extends AbstractService
@@ -40,74 +41,64 @@ final class PageService extends AbstractService
         $years = [];
         $months = [];
 
-        $languages = $this->getLanguages($this->configuration->getTargetPid());
+        $entryPoint = $this->configuration->getTargetPid();
+        $languages = $this->getLanguages($entryPoint);
 
         foreach ($news as $record) {
-            if ($this->configuration->isKeepOriginalStructure()) {
-                if ($this->configuration->createSubFolders()) {
+            $pidMap[$record['uid']] = $entryPoint;
 
-                } else {
+            if ($this->configuration->createYearSubfolders()) {
+                $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
+                $year = $d->format('Y');
+                $month = $d->format('m');
 
+                $newPid = $this->pageRepository->findPageByTitleAndPid($year, $entryPoint);
+
+                if ($newPid === 0) {
+                    $previousYears = array_filter(
+                        array_keys($years),
+                        static fn(int $existingYear): bool => $existingYear < $year
+                    );
+                    $insertPid = $previousYears !== []
+                        ? ($years[max($previousYears)] * -1)
+                        : $entryPoint;
+
+                    $newPid = $this->createPage($year, $insertPid);
+                    $translations = $this->translatePage($newPid, $languages);
+
+                    if ($io->isVerbose()) {
+                        $io->success("Created new page $newPid for $year");
+                        $io->comment("... and $translations translations");
+                    }
                 }
-            } else {
-                if ($this->configuration->createSubFolders()) {
-                    $d = (new \DateTimeImmutable())->setTimestamp($record['datetime']);
-                    $year = $d->format('Y');
-                    $month = $d->format('m');
 
-                    if ($this->configuration->createYearSubfolders()) {
-                        $newPid = $this->pageRepository->findPageByTitleAndPid($year, $this->configuration->getTargetPid());
+                $pidMap[$record['uid']] = $newPid;
+                $years[$year] = $newPid;
 
-                        if ($newPid === 0) {
-                            $previousYears = array_filter(
-                                array_keys($years),
-                                static fn(int $existingYear): bool => $existingYear < $year
-                            );
-                            $insertPid = $previousYears !== []
-                                ? $years[max($previousYears)] * -1
-                                : $this->configuration->getTargetPid();
+                if ($this->configuration->createMonthSubfolders()) {
+                    $newPid = $this->pageRepository->findPageByTitleAndPid($month, $years[$year]);
 
-                            $newPid = $this->createPage($year, $insertPid);
-                            $translations = $this->translatePage($newPid, $languages);
+                    if ($newPid === 0) {
+                        $previousMonths = array_filter(
+                            array_keys($months[$year] ?? []),
+                            static fn(string $existingMonth): bool => $existingMonth < $month
+                        );
 
-                            if ($io->isVerbose()) {
-                                $io->success("Created new page $newPid for $year");
-                                $io->comment("... and $translations translations");
-                            }
+                        $insertPid = $previousMonths !== []
+                            ? $months[$year][max($previousMonths)] * -1
+                            : $years[$year];
+
+                        $newPid = $this->createPage($month, $insertPid);
+                        $translations = $this->translatePage($newPid, $languages);
+
+                        if ($io->isVerbose()) {
+                            $io->success("Created new page $newPid for $year/$month");
+                            $io->comment("... and $translations translations");
                         }
-
-                        $pidMap[$record['uid']] = $newPid;
-                        $years[$year] = $newPid;
                     }
-
-                    if ($this->configuration->createMonthSubfolders()) {
-                        $newPid = $this->pageRepository->findPageByTitleAndPid($month, $years[$year]);
-
-                        if ($newPid === 0) {
-                            $previousMonths = array_filter(
-                                array_keys($months[$year] ?? []),
-                                static fn(string $existingMonth): bool => $existingMonth < $month
-                            );
-
-                            $insertPid = $previousMonths !== []
-                                ? $months[$year][max($previousMonths)] * -1
-                                : $years[$year];
-
-                            $newPid = $this->createPage($month, $insertPid);
-                            $translations = $this->translatePage($newPid, $languages);
-
-                            if ($io->isVerbose()) {
-                                $io->success("Created new page $newPid for $year/$month");
-                                $io->comment("... and $translations translations");
-                            }
-                        }
-                        //override year folder with month folder
-                        $pidMap[$record['uid']] = $newPid;
-                        $months[$year][$month] = $newPid;
-
-                    }
-                } else {
-                    $pidMap[$record['uid']] = $this->configuration->getTargetPid();
+                    //override year folder with month folder
+                    $pidMap[$record['uid']] = $newPid;
+                    $months[$year][$month] = $newPid;
                 }
             }
         }
@@ -118,7 +109,6 @@ final class PageService extends AbstractService
     private function createPage(string $title, int $pid): int
     {
         $archiveRootPage = $this->pageRepository->getPageRecord($this->configuration->getTargetPid());
-
 
         $usePageProperties = $this->eventDispatcher->dispatch(
             new CreatePageAttributesEvent(

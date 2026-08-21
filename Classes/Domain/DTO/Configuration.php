@@ -17,7 +17,6 @@ class Configuration implements SingletonInterface
         'archiveMode' => ArchiveMode::AGE->value,
         'archiveNewsAmount' => 365,
         'newsRootFolder' => '',
-        'keepOriginalStructure' => false,
         'subfolders' => SubFolders::NONE->value,
         'recursive' => 0,
         'limit' => 200,
@@ -28,7 +27,6 @@ class Configuration implements SingletonInterface
     private int $recursive;
     private int $targetPid;
     private int $archiveNewsAmount;
-    private bool $keepOriginalStructure;
     private int $limit;
     private ArchiveAction $archiveAction;
     private ArchiveMode $archiveMode;
@@ -42,7 +40,6 @@ class Configuration implements SingletonInterface
         $this->newsRootFolder = (string)$this->resolveSetting('newsRootFolder', $configuration);
         $this->recursive = (int)$this->resolveSetting('recursive', $configuration);
         $this->targetPid = (int)$this->resolveSetting('targetPid', $configuration);
-        $this->keepOriginalStructure = (bool)$this->resolveSetting('keepOriginalStructure', $configuration);
         $this->limit = (int)$this->resolveSetting('limit', $configuration);
 
         $this->archiveAction = $this->resolveEnum(ArchiveAction::class, 'archiveAction', $configuration);
@@ -128,16 +125,6 @@ class Configuration implements SingletonInterface
         return $this->archiveNewsAmount;
     }
 
-    public function getSubfolders(): SubFolders
-    {
-        return $this->subfolders;
-    }
-
-    public function createSubFolders(): bool
-    {
-        return $this->subfolders->allowSubFolders();
-    }
-
     public function createYearSubfolders(): bool
     {
         return $this->subfolders->allowYear();
@@ -168,11 +155,6 @@ class Configuration implements SingletonInterface
         return $this->targetPid;
     }
 
-    public function isKeepOriginalStructure(): bool
-    {
-        return $this->keepOriginalStructure;
-    }
-
     public function getLimit(): int
     {
         return $this->limit;
@@ -186,7 +168,6 @@ class Configuration implements SingletonInterface
             'newsRootFolder' => $this->newsRootFolder,
             'recursive' => $this->recursive,
             'targetPid' => $this->targetPid,
-            'keepOriginalStructure' => $this->keepOriginalStructure,
             'limit' => $this->limit,
             'archiveAction' => $this->archiveAction,
             'archiveMode' => $this->archiveMode,

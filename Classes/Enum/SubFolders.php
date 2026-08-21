@@ -9,11 +9,6 @@ enum SubFolders: string
     case YEAR = 'year';
     case MONTH = 'month';
 
-    public function allowSubFolders(): bool
-    {
-        return $this !== self::NONE;
-    }
-
     public function allowYear(): bool
     {
         return $this === self::YEAR || $this === self::MONTH;

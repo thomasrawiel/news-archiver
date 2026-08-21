@@ -68,11 +68,6 @@ final class NewsArchiverCommand extends Command
                 'mode' => InputOption::VALUE_OPTIONAL,
                 'description' => 'Age in days or amount',
             ],
-            'keepOriginalStructure' => [
-                'shortcut' => 'O',
-                'mode' => InputOption::VALUE_NONE,
-                'description' => 'Rebuild the original folder structure in the archive',
-            ],
             'subfolders' => [
                 'shortcut' => 'S',
                 'mode' => InputOption::VALUE_OPTIONAL,
@@ -115,10 +110,6 @@ final class NewsArchiverCommand extends Command
             return Command::SUCCESS;
         }
 
-        //temp throw exceptions for not yet implemented settings
-        if ($configuration->isKeepOriginalStructure()) {
-            throw new \LogicException('Feature "keepOriginalStructure" is not implemented, yet.');
-        }
         if ($configuration->getTargetPid() === 0) {
             throw new \LogicException('Feature "targetPid is 0" is not implemented, yet.');
         }

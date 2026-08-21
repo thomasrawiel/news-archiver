@@ -19,9 +19,6 @@ archiveMode = age
 # cat=Archiver settings; type=int+; label=Age in days or amount
 archiveNewsAmount = 365
 
-# cat=Archiver settings; type=boolean; label=Rebuild the original folder structure in the archive
-keepOriginalStructure = 0
-
 # cat=Archiver settings; type=options[None=none,Newsdate year=year, Newsdate month=month]; label=Create subfolders in archive folder
 subfolders = none
 
