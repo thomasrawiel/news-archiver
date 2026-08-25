@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 namespace TRAW\NewsArchiver\Event;
 
+use TRAW\NewsArchiver\Domain\DTO\Configuration;
+
 final class CreatePageAttributesEvent
 {
-    public function __construct(private array $pageAttributes) {
+    public function __construct(private array $pageAttributes, private readonly Configuration $configuration)
+    {
 
     }
 
@@ -17,5 +20,10 @@ final class CreatePageAttributesEvent
     public function setPageAttributes(array $pageAttributes): void
     {
         $this->pageAttributes = $pageAttributes;
+    }
+
+    public function getConfiguration(): Configuration
+    {
+        return $this->configuration;
     }
 }

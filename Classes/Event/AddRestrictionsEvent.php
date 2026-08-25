@@ -5,9 +5,9 @@ namespace TRAW\NewsArchiver\Event;
 
 use TYPO3\CMS\Core\Database\Query\Restriction\QueryRestrictionInterface;
 
-class AddRestrictionsEvent
+final class AddRestrictionsEvent
 {
-    public function __construct(private string $tableName, private array $restrictions = [])
+    public function __construct(private readonly string $tableName, private array $restrictions = [])
     {
     }
 

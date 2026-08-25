@@ -112,7 +112,8 @@ final class PageService extends AbstractService
 
         $usePageProperties = $this->eventDispatcher->dispatch(
             new CreatePageAttributesEvent(
-                ['doktype', 'hidden', 'fe_group', 'perms_userid', 'perms_groupid', 'perms_everybody', 'module', 'backend_layout', 'backend_layout_next_level']
+                ['doktype', 'hidden', 'fe_group', 'perms_userid', 'perms_groupid', 'perms_everybody', 'module', 'backend_layout', 'backend_layout_next_level'],
+                $this->configuration
             )
         )->getPageAttributes();
 

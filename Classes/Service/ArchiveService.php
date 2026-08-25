@@ -15,22 +15,17 @@ use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 final class ArchiveService extends AbstractService
 {
     public function __construct(
-        protected readonly ConfigurationUtility $configurationUtility,
-        protected readonly NewsRepository       $newsRepository,
-        protected readonly PageService          $pageService,
-        protected readonly PageRepository       $pageRepository,
-        protected readonly EventDispatcher      $eventDispatcher
+        private readonly ConfigurationUtility $configurationUtility,
+        private readonly NewsRepository       $newsRepository,
+        private readonly PageService          $pageService,
+        private readonly EventDispatcher      $eventDispatcher
     )
     {
     }
 
     public function archive(SymfonyStyle $io, ?Configuration $configuration = null): void
     {
-        if ($configuration === null) {
-            $this->configuration = $this->configurationUtility->getConfiguration();
-        } else {
-            $this->configuration = $configuration;
-        }
+        $this->configuration = $configuration ?? $this->configurationUtility->getConfiguration();
         $this->pageService->setConfiguration($this->configuration);
 
         $news = $this->newsRepository->fetchNews($this->configuration);
