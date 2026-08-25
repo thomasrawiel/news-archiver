@@ -20,8 +20,8 @@ final class PageService extends AbstractService
 {
 
     public function __construct(
-        private readonly PageRepository $pageRepository,
-        private EventDispatcher         $eventDispatcher,
+        private readonly PageRepository  $pageRepository,
+        private readonly EventDispatcher $eventDispatcher,
     )
     {
     }
@@ -143,8 +143,10 @@ final class PageService extends AbstractService
 
             return $languages;
         } catch (Throwable) {
-            return [];
+            $languages = [];
         }
+
+        return $languages;
     }
 
     private function translatePage(int $pageUid, array $languages): int
